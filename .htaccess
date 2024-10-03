@@ -1,0 +1,23 @@
+RewriteEngine On
+
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.*)$ $1.php [L]
+
+# /
+RewriteRule ^admin/dashboard$ admin/pages/index.php [L,QSA]
+RewriteRule ^admin/$ admin/pages/index.php [L,QSA]
+
+# pages
+RewriteRule ^admin/manage$ admin/pages/manage.php [L,QSA]
+RewriteRule ^admin/category$ admin/pages/category.php [L,QSA]
+RewriteRule ^admin/food$ admin/pages/food.php [L,QSA]
+RewriteRule ^admin/order$ admin/pages/order.php [L,QSA]
+
+
+
+
+# Tüm diğer istekler için 404 hata sayfası
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-l
+RewriteRule ^(.*)$ 404.php [L]
