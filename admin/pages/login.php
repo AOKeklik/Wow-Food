@@ -2,7 +2,7 @@
 require_once ("../load.php");
 
 if (isset($_SESSION["userLoggedIn"]))
-    header("Location: /Wow-Food/admin/manage");
+    header("Location: ".Constants::$ROOT_URL."admin/manage");
 
 $message = "";
 
@@ -18,7 +18,7 @@ if (isset ($_POST["login-submit"])) {
         $message = '<p class="message active">'.$set->getError ().'</p>';
     } else {
         $_SESSION["userLoggedIn"] = $user->username();
-        header("Location: /Wow-Food/admin/manage");
+        header("Location: ".Constants::$ROOT_URL."admin/manage");
     }
 }
 

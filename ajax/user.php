@@ -1,6 +1,7 @@
 <?php
 require_once ("../admin/load.php");
 $url = Constants::$ROOT_URL."admin/";
+
 try {
 
     if (isset($_POST["exist-user"])) {

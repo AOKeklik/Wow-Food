@@ -5,7 +5,7 @@ if (!isset($_SESSION["userLoggedIn"]))
     header("Location: /Wow-Food/admin/manage");
 
 if (!isset($_GET["userId"]))
-    header("Location: /Wow-Food/admin/manage");
+    header("Location: ".Constants::$ROOT_URL."admin/manage");
 
 $user = new User ($pdo, $_GET["userId"]);
 $message = "";
@@ -23,7 +23,7 @@ if (isset ($_POST["login-submit"])) {
         $message = '<p class="message active">'.$set->getError ().'</p>';
     else {
         $_SESSION["message"]["update"] = '<p class="message message-info active">User successfully updated!</p>';
-        header("Location: /Wow-Food/admin/manage");
+        header("Location: ".Constants::$ROOT_URL."admin/manage");
     }
         
 }

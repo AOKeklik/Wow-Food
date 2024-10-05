@@ -1,4 +1,4 @@
 <?php
 session_start();
 session_destroy();
-header ("Location: login");
+header ("Location: ".Constants::$ROOT_URL."admin/login");
