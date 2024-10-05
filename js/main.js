@@ -8,13 +8,15 @@ new class NavUpdate {
     __toggle () {
         document.addEventListener ("click", e => {
             const node = e.target
-            const allActiveParent = document.querySelectorAll (".nav-update.active")
+            const allParent = document.querySelectorAll (".nav-update")
             const parent = node.closest(".nav-update")
-            const btn = node.closest(".nav-update-toggle")
 
-            allActiveParent.forEach(el => el.classList.remove ("active")) 
-
-            if (btn)  parent.classList.toggle ("active")
+            allParent.forEach(el => {
+            if (el !== parent) 
+               el.classList.remove ("active")
+            else
+                parent.classList.toggle ("active")
+           }) 
         })
     }
 }
@@ -53,6 +55,17 @@ const Form = new class Form {
     madals = document.querySelectorAll (".modal")
     constructor () {
         this.__animatePlaceholder () 
+        this.__loadAnimatePlaceholder ()
+    }
+    __loadAnimatePlaceholder () {
+        this.forms.forEach (form => {
+            const labels = form.querySelectorAll ("label")
+            labels.forEach (label => {
+                const input = label.querySelector("input") || label.querySelector("textarea")
+                if (input.value.trim() !== "")
+                    label.classList.add("active")
+            })
+        })
     }
     __animatePlaceholder () {
         this.forms.forEach (form => {
@@ -79,13 +92,28 @@ const Form = new class Form {
         })
     }
 }
+class Animate {
+    static remove (node) {
+        node.style.opacity = 0
+        node.style.transition = ".5s"
+        node.addEventListener ("transitionend", e => {
+            node.remove()
+        })
+    }
+    static redirect (path) {
+        setTimeout(() => {
+            window.location.href = ROOT.concat("admin", path)
+        }, "1s");
+    }
+}
 
 
 /* users */
-function addUser (e) {
+async function addUser (e) {
     try {
         e.preventDefault ()
 
+        const messageInfo = document.querySelector(".message-info")
         const node = e.target
         const parent = node.closest(".modal")
         const table = document.querySelector(".table-full table tbody")
@@ -103,12 +131,14 @@ function addUser (e) {
 
         let errors = []
 
-        if (name === "" )
+        if (name === "")
             errors.push("Name field is required!") 
         else if (userName === "")
             errors.push("User Name field is required!") 
         else if (password === "") 
             errors.push("Password field is required!") 
+        else if (await existUser(userName)) 
+            errors.push("Username must be unique!") 
         else if (password !== confirmpassword) 
             errors.push("Passwords do not match!") 
 
@@ -123,11 +153,15 @@ function addUser (e) {
                 contentType: false,
                 data: formData,
                 success: function (data) {
-                    console.log(data)  
+                    const result = JSON.parse(data)
+                    console.log(result)
 
-                    table.insertAdjacentHTML ("beforeend", data)
+                    table.insertAdjacentHTML ("beforeend", result.data)
                     Modal.close ()
                     Form.clear ()
+
+                    messageInfo.innerHTML = result.message
+                    messageInfo.classList.add("active")
                 },
                 error: (jqXHR, textStatus, errorThrow) => {
                     console.log(jqXHR, textStatus, errorThrow)
@@ -141,5 +175,69 @@ function addUser (e) {
         console.log("addUser: " + err)
     }
 }
-function deleteUser (e) {}
-function updateUser (e) {}
+function deleteUser (e, userId) {
+    try {
+        e.preventDefault ()
+
+        const messageInfo = document.querySelector(".message-info")
+        const node = e.target
+        const parent = node.closest("tr")
+        const formData = new FormData ()
+
+        formData.append("delete-user", true)
+        formData.append("userId", userId)
+
+        $.ajax ({
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            url: ROOT.concat("ajax/user.php"),
+            success: data => {
+                const result = JSON.parse(data)
+                console.log(result)
+ 
+                messageInfo.innerHTML = result.message
+                messageInfo.classList.add("active")
+
+                Animate.remove (parent)
+            },
+            error: (jqXHR, textStatus, errorThrow) => {
+                console.log(jqXHR, textStatus, errorThrow)
+            }
+        })
+    } catch (err) {
+        console.log("deleteUser: ", err)
+    }
+}
+async function existUser (username) {
+    try {
+        const formData = new FormData ()
+
+        formData.append("exist-user", true)
+        formData.append("username", username)
+
+        let result = false
+    
+        await $.ajax ({
+            url: ROOT.concat("ajax/user.php"),
+            type: "POST",
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: data => {
+                console.log(data) 
+                if (data === "true") {
+                    result = true
+                }
+            },
+            error: (jqXHR, textStatus, errorThrow) => {
+                console.log(jqXHR, textStatus, errorThrow)
+            }
+        })
+
+        return result
+    } catch  (err) {
+        console.log(err)
+    }
+}

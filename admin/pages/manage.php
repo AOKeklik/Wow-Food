@@ -5,14 +5,22 @@
         <div class="wrapper">
             <h3 class="mb-3">ADMIN MANAGEMENT</h3>
         </div>
-        <div class="wrapper">
-            <div class="text-right">
-                <div class="btn btn-sky modal-btn" data-modal-id="9">
-                    <span>Add Admin</span>
-                    <i class="bi bi-person-add"></i>
+        <?php if($set->isAdmin()):?>
+            <div class="wrapper">
+                <div class="text-right">
+                    <div class="btn btn-sky modal-btn" data-modal-id="9">
+                        <span>Add Admin</span>
+                        <i class="bi bi-person-add"></i>
+                    </div>
                 </div>
             </div>
-        </div>
+        <?php endif?>
+        <?php if (isset($_SESSION["message"]["update"])):?>
+            <div class="wrapper">
+                <?php echo $_SESSION["message"]["update"]?>
+            </div>
+        <?php unset($_SESSION["message"]["update"]); endif?>
+        <p class="message message-info"></p>
         <div class="wrapper">
             <div class="table-full">
                 <table>
@@ -25,26 +33,32 @@
                         </tr>
                    </thead>
                     <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>Ahmet Tarhan</td>
-                            <td>ahmet</td>
-                            <td>
-                                <div class="nav-update">
-                                    <i class="nav-update-toggle bi bi-three-dots pointer text-3"></i>
-                                    <div class="nav-update-items">
-                                        <div class="nav-update-item">
-                                            <i class="bi bi-trash text-2 text-red-400"></i>
-                                            <span>Delete</span>
-                                        </div>
-                                        <div class="nav-update-item">
-                                            <i class="bi bi-pencil-square text-2 text-red-400"></i>
-                                            <span>Update</span>
+                        <?php foreach ($set->getAllUser () as $item):?>
+                            <tr>
+                                <td><?php echo $item->id()?></td>
+                                <td><?php echo $item->name()?></td>
+                                <td><?php echo $item->username()?></td>
+                                <td>
+                                    <div class="nav-update">
+                                        <i class="nav-update-toggle bi bi-three-dots pointer text-3"></i>
+                                        <div class="nav-update-items">
+                                            <?php if ($item->username() === $_SESSION["userLoggedIn"] || $set->isAdmin()):?>
+                                                <?php if ($item->role() !== "admin"):?>   
+                                                    <div onclick="deleteUser (event, <?php echo $item->id()?>)" class="nav-update-item">
+                                                        <i class="bi bi-trash text-2 text-red-400"></i>
+                                                        <span>Delete</span>
+                                                    </div>                           
+                                                <?php endif?>                 
+                                                <a class="nav-update-item" href="<?php echo Constants::$ROOT_URL?>admin/userupdate/<?php echo $item->id()?>">
+                                                    <i class="bi bi-pencil-square text-2 text-red-400"></i>
+                                                    <span>Update</span>
+                                                </a>
+                                            <?php endif?>
                                         </div>
                                     </div>
-                                </div>
-                            </td>
-                        </tr>
+                                </td>
+                            </tr>
+                        <?php endforeach?>
                     </tbody>
                 </table>
             </div>
@@ -83,6 +97,11 @@
             </div>
         </div>
     </div>
+
+    <?php
+        $username = isset ($_POST["username"]) ? $_POST["username"] : "";
+        $name = isset ($_POST["name"]) ? $_POST["name"] : "";
+    ?>
 
 <?php require_once ("../partials/footer.php")?>
 
