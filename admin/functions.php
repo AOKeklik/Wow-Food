@@ -146,6 +146,7 @@ class Functions {
         try {
             $data = $this->formSanitizer($data);
             $this->validateRequireFields($data);
+            $this->validateExistUser($data);
 
             if (empty ($this->errors)) {
                 $data = $this->hashPassword($data);
@@ -245,6 +246,17 @@ class Functions {
             }
                 
             return $inputs;
+        } catch (PDOException $err) {
+            echo "User: ".$err->getMessage();
+        }
+    }
+    private function validateExistUser ($inputs) {
+        try {
+            if (isset($inputs["username"]) && !empty($inputs["username"])) {    
+                $user = $this->getUserByUsername ($inputs["username"]);
+                if (!$user || hash("sha512", $inputs["password"]) !== $user->pass())
+                    array_push($this->errors, "User not found!");
+            }
         } catch (PDOException $err) {
             echo "User: ".$err->getMessage();
         }
