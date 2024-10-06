@@ -1,38 +1,4 @@
 <?php 
-class User {
-    private $pdo,$data;
-    public function __construct($pdo, $input) {
-        $this->pdo = $pdo;
-        if (is_array($input)) {
-            $this->data = $input;
-        } else {
-            try {
-                $sql = "select * from tbl_admin where id=:id";
-                $stmt = $pdo->prepare ($sql);
-                $stmt->bindValue (":id", $input);
-                $stmt->execute ();
-                $this->data = $stmt->fetch(PDO::FETCH_ASSOC);
-            } catch (PDOException $err) {
-                echo "User: ".$err->getMessage();
-            }
-        }
-    }
-    public function id () {
-        return $this->data["id"];
-    }
-    public function name () {
-        return $this->data["full_name"];
-    }
-    public function username () {
-        return $this->data["username"];
-    }
-    public function pass () {
-        return $this->data["password"];
-    }
-    public function role () {
-        return $this->data["role"];
-    }
-}
 class Functions {
     private $pdo,$errors=[];
 
@@ -40,16 +6,19 @@ class Functions {
         $this->pdo = $pdo;
     }
 
-    /* USERS */
-    public function getAllUser () {
+    /* GENERALS */
+    public function getAll ($table) {
         try {
-            $sql = "select * from tbl_admin";
+            $sql = "select * from $table";
             $stmt = $this->pdo->prepare ($sql);
             $stmt->execute ();
             
             $results = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $results[] = new User ($this->pdo, $row);
+                if (strpos($table, "category"))
+                    $results[] = new Category ($this->pdo, $row);
+                else
+                    $results[] = new User ($this->pdo, $row);
             }
             
             return $results;
@@ -57,11 +26,11 @@ class Functions {
             echo "User: ".$err->getMessage();
         }
     }
-    public function createUser ($data) {
+    public function create ($table, $data) {
         try {
             $data = $this->formSanitizer($data);
             $data = $this->hashPassword($data);
-            $sql = "insert into tbl_admin (".implode(", ", array_keys($data)).")";
+            $sql = "insert into $table (".implode(", ", array_keys($data)).")";
             $sql .= "values(:".implode(", :", array_keys($data)).")";
             
             $stmt = $this->pdo->prepare($sql);
@@ -70,13 +39,51 @@ class Functions {
                 $stmt->bindValue (":$key", $val);
             }
 
-            $stmt->execute();
-
-            return $this->pdo->lastInsertId();
+            return $stmt->execute() ? $this->pdo->lastInsertId() : false;
         } catch (PDOException $err) {
-            return "createUser: ".$err->getMessage ();
+            throw new Exception("create: " . $err->getMessage());
         }
     }
+    public function delete ($table, $data) {
+        try {
+            $data = $this->formSanitizer($data);
+
+            $sql = "delete from $table where id=:id";
+            $stmt = $this->pdo->prepare ($sql);
+            
+            foreach ($data as $key => $val) {
+                $stmt->bindValue (":$key", $val);
+            }
+
+            return $stmt->execute () ? true : false;
+        } catch (PDOException $err) {
+            echo "User: ".$err->getMessage();
+        }
+    }
+    public function update ($table, $data, $id) {
+        $sql = "update $table set ";
+
+        foreach ($data as $key => $val) {
+            if (array_key_last($data) == $key)
+                $sql .= "$key=:$key ";
+            else
+                $sql .= "$key=:$key,";
+        }
+
+        $sql .= "where id=:id";
+        
+        $stmt = $this->pdo->prepare($sql);
+
+        foreach ($data as $key => $val) {
+            $stmt->bindValue (":$key", $val);
+        }
+
+        $stmt->bindValue (":id", $id);
+
+        return $stmt->execute() ? true : false;
+    }
+
+    /* USERS */
     public function updateUser ($data, $userId) {
         try {
             $data = $this->formSanitizer($data);
@@ -87,47 +94,14 @@ class Functions {
             if (empty ($this->errors)) {
                 $data = $this->hashPassword($data);
 
-                $sql = "update tbl_admin set ";
-
-                foreach ($data as $key => $val) {
-                    if (array_key_last($data) == $key)
-                        $sql .= "$key=:$key ";
-                    else
-                        $sql .= "$key=:$key,";
-                }
-
-                $sql .= "where id=:id";
+                $user = $this->update ("tbl_admin", $data, $userId);
                 
-                $stmt = $this->pdo->prepare($sql);
-
-                foreach ($data as $key => $val) {
-                    $stmt->bindValue (":$key", $val);
-                }
-
-                $stmt->bindValue (":id", $userId);
-                
-                return $stmt->execute();
+                return $user;
             }
 
             return false;
         } catch (PDOException $err) {
-            return "createUser: ".$err->getMessage ();
-        }
-    }
-    public function deleteUser ($data) {
-        try {
-            $data = $this->formSanitizer($data);
-
-            $sql = "delete from tbl_admin where id=:id";
-            $stmt = $this->pdo->prepare ($sql);
-            
-            foreach ($data as $key => $val) {
-                $stmt->bindValue (":$key", $val);
-            }
-
-            return $stmt->execute ();
-        } catch (PDOException $err) {
-            echo "User: ".$err->getMessage();
+            return "updateUser: ".$err->getMessage ();
         }
     }
     public function getUserByUsername ($username) {
@@ -139,7 +113,7 @@ class Functions {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             return $user ? new User ($this->pdo, $user) : false;
         } catch (PDOException $err) {
-            echo "User: ".$err->getMessage();
+            throw new Exception("getUserByUsername: " . $err->getMessage());
         }
     }
     public function login ($data) {
@@ -171,6 +145,38 @@ class Functions {
         }
     }
 
+    /* CATEGORY */
+    public function getCategoryByTitle ($title) {
+        try {
+            $sql = "select * from tbl_category where title=:title";
+            $stmt = $this->pdo->prepare ($sql);
+            $stmt->bindValue(":title", $title);
+            $stmt->execute();
+            $category = $stmt->fetch(PDO::FETCH_ASSOC);
+            return  $category ? new Category ($this->pdo, $category) : false;
+        } catch (PDOException $err) {
+            throw new Exception("getCategoryByTitle: " . $err->getMessage());
+        }
+    }
+    public function updateCategory ($data, $userId) {
+        try {
+            $data = $this->formSanitizer($data);
+            $this->validateRequireFields($data);
+
+            if (empty ($this->errors)) {
+                $data = $this->hashPassword($data);
+
+                $user = $this->update ("tbl_category", $data, $userId);
+                
+                return $user;
+            }
+
+            return false;
+        } catch (PDOException $err) {
+            return "updateUser: ".$err->getMessage ();
+        }
+    }
+
     /* HELPERS */
     public function getError () {
         return $this->errors[0];
@@ -186,6 +192,19 @@ class Functions {
         }
 
         return false;
+    }
+    public function sendResponse ($status, $msg, $rest=[]) {
+        $response = [
+            "status" => $status,
+            "message" => $msg
+        ];
+
+        if (!empty ($rest)) {
+            $response = array_merge($response, $rest);
+        }
+
+        echo json_encode($response);
+        exit;
     }
 
     /* FORMS */
@@ -212,9 +231,14 @@ class Functions {
     }
     private function validateRequireFields ($inputs) {
         foreach ($inputs as $key => $val) {
-            if (empty ($val)) {
-                array_push($this->errors, "$key field is require");
-            }
+
+            if ($key === "active" || $key === "featured") {
+                if (!isset($val) || !in_array($val, ["0", "1"], true))
+                    array_push($this->errors, ucfirst($key) . " field is required and must be 1 or 0.");
+            } else
+                if (empty ($val)) {
+                    array_push($this->errors, "$key field is require");
+                }
         }   
     }
     private function validateConfirmPassword ($inputs) {

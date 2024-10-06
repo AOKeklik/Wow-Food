@@ -10,6 +10,7 @@ RewriteRule ^admin/$ admin/pages/index.php [L,QSA]
 RewriteRule ^admin/login$ admin/pages/login.php [L,QSA]
 RewriteRule ^admin/logout$ admin/pages/logout.php [L,QSA]
 RewriteRule ^admin/userupdate/([0-9]+)$ admin/pages/userupdate.php?userId=$1 [L,QSA]
+RewriteRule ^admin/categoryupdate$ admin/pages/categoryupdate.php [L,QSA]
 
 # pages
 RewriteRule ^admin/manage$ admin/pages/manage.php [L,QSA]

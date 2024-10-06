@@ -8,21 +8,36 @@ if (!isset($_GET["userId"]))
     header("Location: ".Constants::$ROOT_URL."admin/manage");
 
 $user = new User ($pdo, $_GET["userId"]);
-$message = "";
+$usermsg = "";
+$passmsg = "";
 
-if (isset ($_POST["login-submit"])) {
+if (isset ($_POST["user-submit"])) {
     $data = [
         "full_name" => $_POST["full_name"],
-        "username" => $_POST["username"],
+        "username" => $_POST["username"]
+    ];
+    
+    if (!$set->updateUser($data, $user->id())) 
+        $usermsg = '<p class="message active">'.$set->getError ().'</p>';
+    else {
+        $_SESSION["message"]["update"] = '<p class="message message-info active">User successfully updated!</p>';
+        header("Location: ".Constants::$ROOT_URL."admin/manage");
+    }
+        
+}
+
+if (isset ($_POST["password-submit"])) {
+    $data = [
+        "username" => $_SESSION["userLoggedIn"],
         "currentpassword" => $_POST["currentpassword"],
         "password" => $_POST["password"],
         "confirmpassword" => $_POST["confirmpassword"],
     ];
     
     if (!$set->updateUser($data, $user->id())) 
-        $message = '<p class="message active">'.$set->getError ().'</p>';
+        $passmsg = '<p class="message active">'.$set->getError ().'</p>';
     else {
-        $_SESSION["message"]["update"] = '<p class="message message-info active">User successfully updated!</p>';
+        $_SESSION["message"]["update"] = '<p class="message message-info active">Password successfully updated!</p>';
         header("Location: ".Constants::$ROOT_URL."admin/manage");
     }
         
@@ -42,9 +57,9 @@ $username = isset ($_POST["username"]) ? $_POST["username"] : $user->username();
 </head>
 <body>
 
-    <div class="wrapper">
+    <div class="wrapper mb-10">
         <h2 class="mb-2">Update User</h2>
-        <?php echo $message?>
+        <?php echo $usermsg?>
         <form action="" method="post" class="form">
             <label for="full_name">
                 <span>Name</span>
@@ -54,6 +69,16 @@ $username = isset ($_POST["username"]) ? $_POST["username"] : $user->username();
                 <span>Username</span>
                 <input type="text" name="username" id="username" value="<?php echo $username?>">
             </label>
+            <button type="submit" name="user-submit" class="btn btn-sky self-center">
+                <span>Update</span>
+            </button>
+        </form>
+    </div>
+
+    <div class="wrapper">
+        <h2 class="mb-2">Update Password</h2>
+        <?php echo $passmsg?>
+        <form action="" method="post" class="form">
             <label for="currentpassword">
                 <span>Current Password</span>
                 <input type="text" name="currentpassword" id="currentpassword">
@@ -66,7 +91,7 @@ $username = isset ($_POST["username"]) ? $_POST["username"] : $user->username();
                 <span>Confirm Password</span>
                 <input type="text" name="confirmpassword" id="confirmpassword">
             </label>
-            <button type="submit" name="login-submit" class="btn btn-sky self-center">
+            <button type="submit" name="password-submit" class="btn btn-sky self-center">
                 <span>Update</span>
             </button>
         </form>

@@ -5,20 +5,15 @@ $url = Constants::$ROOT_URL."admin/";
 try {
 
     if (isset($_POST["exist-user"])) {
-        if ($set->getUserByUsername($_POST["username"])) {
-            echo "true";
-            return;
-        }
+        if ($set->getUserByUsername($_POST["username"])) 
+            $set->sendResponse ("error","already exist!");
     }
     
     if (isset($_POST["add-user"])) {
 
-        if ($set->getUserByUsername($_POST["username"])) {
-            echo "exist user!";
-            return;
-        }
+        if ($set->getUserByUsername($_POST["username"])) return;
 
-        if (!$userId=$set->createUser([
+        if (!$userId=$set->create("tbl_admin", [
             "full_name" => $_POST["name"],
             "username" => $_POST["username"],
             "password" => $_POST["password"]
@@ -60,7 +55,7 @@ try {
     if (isset($_POST["delete-user"])) {
         $response = [];
 
-        if (!$set->deleteUser ([ "id" => $_POST["userId"]])) {
+        if (!$set->delete ("tbl_admin", [ "id" => $_POST["userId"]])) {
             $response["status"] = "error";
             $response["message"] = "Fail deleting user!";
         }
@@ -74,7 +69,7 @@ try {
     }
     
 } catch (ErrorException $err) {
-    echo "user-add: ".$err->getMessage();
+    echo "user: ".$err->getMessage();
 }
 
 ?>

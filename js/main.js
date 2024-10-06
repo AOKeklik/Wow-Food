@@ -61,7 +61,15 @@ const Form = new class Form {
         this.forms.forEach (form => {
             const labels = form.querySelectorAll ("label")
             labels.forEach (label => {
-                const input = label.querySelector("input") || label.querySelector("textarea")
+                
+                let input = label.querySelector("input[type='checkbox']")
+                if (input) {
+                    if (input.checked)
+                        label.classList.add("active")
+                    return
+                }
+
+                input = label.querySelector("input") || label.querySelector("textarea")
                 if (input.value.trim() !== "")
                     label.classList.add("active")
             })
@@ -71,7 +79,17 @@ const Form = new class Form {
         this.forms.forEach (form => {
             const labels = form.querySelectorAll ("label")
             labels.forEach (label => {
-                const input = label.querySelector("input") || label.querySelector("textarea")
+                let input = label.querySelector("input[type='checkbox']")
+                if (input) {
+                    input.addEventListener("change", e => {
+                        if (input.checked)
+                            label.classList.add("active")
+                        else
+                            label.classList.remove("active")
+                    })
+                }
+
+                input = label.querySelector("input") || label.querySelector("textarea")
                 input.addEventListener("focus", e => {
                     label.classList.add("active")
                 })
@@ -153,6 +171,8 @@ async function addUser (e) {
                 contentType: false,
                 data: formData,
                 success: function (data) {
+                    // console.log(data)
+                    if  (!data || !data.includes ("status")) return
                     const result = JSON.parse(data)
                     console.log(result)
 
@@ -226,8 +246,12 @@ async function existUser (username) {
             contentType: false,
             data: formData,
             success: data => {
-                console.log(data) 
-                if (data === "true") {
+                // console.log(data)
+                if  (!data || !data.includes ("status")) return
+
+                const res = JSON.parse(data)
+                console.log(res) 
+                if (res.status === "error") {
                     result = true
                 }
             },
@@ -239,5 +263,149 @@ async function existUser (username) {
         return result
     } catch  (err) {
         console.log(err)
+    }
+}
+
+/* category */
+async function addCategory (e) {
+    try {
+        e.preventDefault ()
+
+        const messageInfo = document.querySelector(".message-info")
+        const node = e.target
+        const parent = node.closest(".modal")
+        const table = document.querySelector(".table-full table tbody")
+        const title = parent.querySelector("input[name='title']").value.trim()
+        const file = parent.querySelector("input[name='image_name']").files[0]
+        const featured = parent.querySelector("input[name='featured']").checked ? 1 : 0
+        const active = parent.querySelector("input[name='active']").checked ? 1 : 0
+        const message = parent.querySelector(".message")
+        const formData = new FormData ()
+
+        const fileName = file?.name && ".".concat(file.name.split(".").pop())
+
+        formData.append("add-category", true)
+        formData.append("title", title)
+        formData.append("file", file)
+        formData.append("fileName", fileName)
+        formData.append("featured", featured)
+        formData.append("active", active)
+
+        let errors = []
+
+        if (title === "")
+            errors.push("Title field is required!") 
+        else if (!fileName)
+            errors.push("Image field is required!") 
+        else if (await existCategory(title)) 
+            errors.push("Category must be unique!") 
+
+        if (errors.length === 0) {
+            errors = []
+            message.classList.remove("active")
+
+            $.ajax ({
+                url: ROOT.concat("ajax/category.php"),
+                type: "POST",
+                processData: false,
+                contentType: false,
+                data: formData,
+                success: function (data) {
+                    // console.log(data)
+                    // return
+                    if  (!data || !data.includes ("status")) return
+                    const res = JSON.parse(data)
+                    console.log(res)    
+
+                    table.insertAdjacentHTML ("beforeend", res.data)
+                    Modal.close ()
+                    Form.clear ()
+
+                    messageInfo.innerHTML = res.message
+                    messageInfo.classList.add("active")
+                },
+                error: (jqXHR, textStatus, errorThrow) => {
+                    console.log(jqXHR, textStatus, errorThrow)
+                }
+            })
+        } else {
+            message.innerHTML = errors[0]
+            message.classList.add("active")
+        }
+    } catch (err) {
+        console.log("addCategory: " + err)
+    }
+}
+function deleteCategory (e, categoryId) {
+    try {
+        e.preventDefault ()
+
+        const messageInfo = document.querySelector(".message-info")
+        const node = e.target
+        const parent = node.closest("tr")
+        const formData = new FormData ()
+
+        formData.append("delete-category", true)
+        formData.append("categoryId", categoryId)
+
+        $.ajax ({
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            url: ROOT.concat("ajax/category.php"),
+            success: data => {
+                // console.log(data)
+                if  (!data || !data.includes ("status")) return
+
+                const res = JSON.parse(data)
+                console.log(res) 
+ 
+                messageInfo.innerHTML = res.message
+                messageInfo.classList.add("active")
+
+                Animate.remove (parent)
+            },
+            error: (jqXHR, textStatus, errorThrow) => {
+                console.log(jqXHR, textStatus, errorThrow)
+            }
+        })
+    } catch (err) {
+        console.log("deleteUser: ", err)
+    }
+}
+async function existCategory (title) {
+    try {
+        const formData = new FormData ()
+
+        formData.append("exist-category", true)
+        formData.append("title", title)
+
+        let result = false
+    
+        await $.ajax ({
+            url: ROOT.concat("ajax/category.php"),
+            type: "POST",
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: data => {
+                // console.log(data)
+                if  (!data || !data.includes ("status")) return
+
+                const res = JSON.parse(data)
+                console.log(res) 
+                if (res.status === "error") {
+                    result = true
+                }
+            },
+            error: (jqXHR, textStatus, errorThrow) => {
+                console.log(jqXHR, textStatus, errorThrow)
+            }
+        })
+
+        return result
+    } catch  (err) {
+        console.log("existCategory: " + err)
     }
 }

@@ -68,6 +68,8 @@ h6 {font-size: 100%;}
 .col-md-4 {width: 100%;}
 @media (min-width: 768px) {.col-md-4 {width: calc((100% - 3 * var(--gap)) / 4)}}
 .wrapper {width: 100%;max-width: 120rem;margin: 0 auto;padding: 1%;}
+/* display */
+.none {display: none;}
 /* flex */
 .flex {display: flex;flex-direction: row;}
 .flex-column {display: flex;flex-direction: column;}
@@ -89,7 +91,12 @@ h6 {font-size: 100%;}
 .p-3 {padding: 3rem;}
 .mb-2 {margin-bottom: 2rem;}
 .mb-3 {margin-bottom: 3rem;}
+.mb-10 {margin-bottom: 10rem;}
 .my-3 {margin-top: 3rem;margin-bottom: 3rem;}
+/* size */
+.h-7 {height: 7rem;}
+.wh-20 {width: 100%;max-width: 20rem;height: 20rem;}
+.w-100\% {width: 100%;}
 /* text */
 .bold {font-weight: 700;} 
 .text-2 {font-size: 2rem;}
@@ -106,6 +113,8 @@ h6 {font-size: 100%;}
 .bg-gray-100 {background-color: var(--clr-gray-100);}
 /* cursor */
 .pointer {cursor: pointer;}
+/* object */
+.obj-cover {object-fit: cover;}
 /* transition */
 .tr-3s {transition-duration: .3s;}
 .tr-color {transition-property: color;}
@@ -116,7 +125,7 @@ h6 {font-size: 100%;}
 
 
 /* btn */
-.btn {display: inline-flex;cursor: pointer;padding: 1rem 2rem;transition: .3s;align-items: center;gap: .5rem;}
+.btn {display: inline-flex;cursor: pointer;padding: 1rem 2rem;transition: .3s;align-items: center;gap: .5rem;border: 1px solid transparent;background: none;}
 .btn-sky {background-color: var(--clr-sky-400);color: var(--clr-white);}
 .btn-sky:hover {background-color: var(--clr-sky-600);}
 /* table */
@@ -130,7 +139,7 @@ h6 {font-size: 100%;}
 .nav-update {position: relative;width: 100%;height: 100%;text-align: center;}
 .nav-update-items {display: flex;flex-direction: column;background-color: var(--clr-red-50);position: absolute;top: 100%;left: 50%;transform: translate(-50%, 50%);opacity: 0;transition: .3s;pointer-events: none;z-index: 9;}
 .nav-update.active .nav-update-items {opacity: 1;transform: translate(-50%, 0%);pointer-events: all;}
-.nav-update-items  > * {display: flex;gap: 1rem;cursor: pointer;padding: 1rem 1.5rem;}
+.nav-update-items  > * {display: flex;gap: 1rem;cursor: pointer;padding: 1rem 1.5rem;background: none;border: none;}
 .nav-update-items  > *:hover {background-color: var(--clr-red-100);}
 /* modal */
 .modal {position: fixed;inset: 0;opacity: 0;pointer-events: none;transition: .3s;}
@@ -143,6 +152,14 @@ h6 {font-size: 100%;}
 .form label {position: relative;}
 .form label span {position: absolute;top: 50%;left: 1rem;transform: translate(0, -50%) scale(1);transition: .3s;transform-origin: left;}
 .form input {border: 1px solid var(--clr-gray-200);transition: .3s;padding: 2.5rem 1rem 1rem 1rem;width: 100%;}
+
+.form label[role="file"] input {position: relative;z-index: 1;}
+.form label[role="file"] span {z-index: 0;opacity: 0;}
+.form label[role="checkbox"] {display: flex;padding-top: 1.5rem;}
+.form label[role="checkbox"] input {display:none;}
+.form label[role="checkbox"] i {display: inline-block;width: 3rem;height: 3rem;background-repeat: no-repeat;background-size: 100% 100%;background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%233dacff' d='m10.6 16.2l7.05-7.05l-1.4-1.4l-5.65 5.65l-2.85-2.85l-1.4 1.4zM3 21V3h18v18z'/%3E%3C/svg%3E");opacity: 0;padding-left: 4rem;transition: opacity 0s 0s;position: relative;}
+.form label[role="checkbox"] input:checked ~ i {opacity: 1;transition: opacity .3s .3s;}
+
 .form input:focus, .form label.active input {border: 1px solid var(--clr-gray-400);}
 .form label.active span {transform: translate(0, -2.5rem) scale(.7);opacity: .7;}
 /* message */
